@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090b10">
+<meta name="description" content="REDLINE — a fast mobile browser reflex game. Avoid red. Beat your score.">
+<title>REDLINE — Avoid Red</title>
+<style>
+:root{--bg:#090b10;--panel:#121620;--panel2:#191f2b;--text:#f7f8fb;--muted:#9299a8;--red:#e24b4b;--gold:#f3c969;--good:#667184}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{display:flex;justify-content:center}
+button{font:inherit}
+.app{width:min(100%,520px);padding:18px 14px 28px}
+.brand{text-align:center;margin:4px 0 18px}
+.brand h1{margin:0;font-size:30px;letter-spacing:5px;font-weight:950}
+.brand p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.head{display:flex;justify-content:space-between;align-items:end;margin-bottom:10px}
+.label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.score{font-size:42px;font-weight:950;line-height:1}
+.right{text-align:right}.level{font-size:20px;font-weight:850}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}
+.stat{background:var(--panel);border-radius:13px;padding:9px;text-align:center}.stat b{display:block;font-size:17px;margin-top:2px}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--panel);padding:9px;border-radius:20px;touch-action:manipulation}
+.tile{aspect-ratio:1;border:0;border-radius:13px;background:var(--panel2);cursor:pointer;min-width:44px;transition:transform .07s,background .09s}
+.tile:active{transform:scale(.91)}.tile.red{background:var(--red)}.tile.good{background:var(--good)}
+.message{text-align:center;min-height:28px;padding:10px 2px 2px;color:var(--muted);font-size:13px}
+.mission{background:var(--panel);border-radius:14px;padding:11px;margin-top:9px}
+.missionTop{display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px}.bar{height:6px;background:#262c39;border-radius:99px;overflow:hidden}.fill{height:100%;width:0;background:var(--gold);transition:width .15s}
+.actions{display:flex;gap:8px;margin-top:9px}.actions button{flex:1;border:0;border-radius:12px;padding:13px 8px;font-weight:850;cursor:pointer}
+.primary{background:var(--text);color:#090b10}.secondary{background:var(--panel);color:var(--text)}
+.overlay{margin-top:10px;background:var(--panel);border-radius:17px;padding:16px;text-align:center}
+.overTitle{font-size:22px;font-weight:900}.overScore{font-size:48px;font-weight:950;color:var(--gold);margin:2px}
+.small{font-size:12px;color:var(--muted)}.hidden{display:none}
+.footer{margin-top:18px;text-align:center;font-size:11px;color:#656d7d}.footer a{color:#9299a8}
+button:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.tile,.fill{transition:none}}
+</style>
+</head>
+<body>
+<main class="app" id="app">
+<header class="brand"><h1>REDLINE</h1><p>AVOID RED. BEAT YOUR SCORE.</p></header>
+
+<section class="head" aria-label="Current score">
+  <div><div class="label">Score</div><div id="score" class="score">0</div></div>
+  <div class="right"><div class="label">Level</div><div id="level" class="level">1</div></div>
+</section>
+
+<section class="stats" aria-label="Game statistics">
+  <div class="stat"><div class="label">Combo</div><b id="combo">x1</b></div>
+  <div class="stat"><div class="label">Coins</div><b id="coins">0</b></div>
+  <div class="stat"><div class="label">Best</div><b id="best">0</b></div>
+</section>
+
+<section id="board" class="board" aria-label="Game board"></section>
+<div id="message" class="message" aria-live="polite">Tap START. Red ends your run.</div>
+
+<section class="mission" aria-label="Mission progress">
+  <div class="missionTop"><span id="missionText">Mission: score 25 points</span><b id="missionCount">0/25</b></div>
+  <div class="bar"><div id="fill" class="fill"></div></div>
+</section>
+
+<div class="actions">
+  <button id="start" class="primary" type="button">START RUN</button>
+  <button id="reset" class="secondary" type="button">RESET BEST</button>
+</div>
+
+<section id="overlay" class="overlay hidden" aria-live="polite">
+  <div class="overTitle">RUN OVER</div>
+  <div id="overScore" class="overScore">0</div>
+  <div id="overText" class="small">Can you beat your best?</div>
+</section>
+
+<footer class="footer">
+  Original game prototype. No account or personal data is required to play.
+</footer>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const board=$("#board"),scoreEl=$("#score"),levelEl=$("#level"),comboEl=$("#combo"),
+        coinsEl=$("#coins"),bestEl=$("#best"),msg=$("#message"),start=$("#start"),
+        reset=$("#reset"),fill=$("#fill"),missionCount=$("#missionCount"),
+        overlay=$("#overlay"),overScore=$("#overScore"),overText=$("#overText");
+
+  let score=0, coins=0, best=Number(localStorage.getItem("redlineBest")||0);
+  let combo=1, level=1, round=0, red=-1, running=false, timer=null;
+  const mission=25;
+
+  function render(){
+    board.innerHTML="";
+    for(let i=0;i<9;i++){
+      const b=document.createElement("button");
+      b.type="button";
+      b.className="tile"+(i===red?" red":"");
+      b.setAttribute("aria-label",i===red?"Red tile — avoid":"Safe tile");
+      b.addEventListener("click",()=>tap(i));
+      board.appendChild(b);
+    }
+  }
+  function update(){
+    scoreEl.textContent=String(score);
+    levelEl.textContent=String(level);
+    comboEl.textContent="x"+combo;
+    coinsEl.textContent=String(coins);
+    bestEl.textContent=String(best);
+    missionCount.textContent=Math.min(score,mission)+"/"+mission;
+    fill.style.width=Math.min(100,(score/mission)*100)+"%";
+  }
+  function schedule(){
+    if(!running)return;
+    round++;
+    level=Math.min(30,1+Math.floor(score/10));
+    red=Math.floor(Math.random()*9);
+    render();
+    const speed=Math.max(230,720-level*15-round*3);
+    clearTimeout(timer);
+    timer=setTimeout(schedule,speed);
+  }
+  function startGame(){
+    clearTimeout(timer);
+    score=0;coins=0;combo=1;level=1;round=0;red=-1;running=true;
+    overlay.classList.add("hidden");
+    start.textContent="RESTART";
+    msg.textContent="Stay sharp. The board is speeding up.";
+    update();schedule();
+  }
+  function tap(i){
+    if(!running)return;
+    if(i===red){end();return}
+    score++;
+    combo=Math.min(9,1+Math.floor(score/5));
+    coins+=combo>=4?2:1;
+    if(score%10===0) msg.textContent="LEVEL "+(1+Math.floor(score/10))+" — SPEED UP!";
+    else if(combo>=5) msg.textContent="🔥 "+combo+"x COMBO";
+    else msg.textContent="Nice. Keep going.";
+    update();
+    const t=board.children[i];
+    if(t){t.classList.add("good");setTimeout(()=>t.classList.remove("good"),90);}
+  }
+  function end(){
+    running=false;clearTimeout(timer);red=-1;render();
+    if(score>best){
+      best=score;
+      localStorage.setItem("redlineBest",String(best));
+      overText.textContent="NEW PERSONAL BEST • "+score;
+    } else {
+      overText.textContent="Best: "+best+" • Coins: "+coins;
+    }
+    update();
+    overScore.textContent=String(score);
+    overlay.classList.remove("hidden");
+    start.textContent="PLAY AGAIN";
+    msg.textContent="You hit red. One more run?";
+  }
+  start.addEventListener("click",startGame);
+  reset.addEventListener("click",()=>{
+    best=0;localStorage.removeItem("redlineBest");score=0;coins=0;combo=1;level=1;
+    running=false;clearTimeout(timer);red=-1;overlay.classList.add("hidden");
+    msg.textContent="Best reset. Ready when you are.";update();render();
+  });
+  update();render();
+})();
+</script>
+</main>
+</body>
+</html>

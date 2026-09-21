@@ -4,12 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090b10">
-<meta name="description" content="REDLINE — a fast mobile browser reflex game. Avoid red. Beat your score.">
+<meta name="description" content="REDLINE — a fast mobile reflex game. Avoid red and beat your score.">
 <title>REDLINE — Avoid Red</title>
+
 <style>
-:root{--bg:#090b10;--panel:#121620;--panel2:#191f2b;--text:#f7f8fb;--muted:#9299a8;--red:#e24b4b;--gold:#f3c969;--good:#667184}
+:root{
+--bg:#090b10;--panel:#121620;--panel2:#191f2b;
+--text:#f7f8fb;--muted:#9299a8;--red:#e24b4b;
+--gold:#f3c969;--good:#667184
+}
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);
+font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 body{display:flex;justify-content:center}
 button{font:inherit}
 .app{width:min(100%,520px);padding:18px 14px 28px}
@@ -21,149 +27,344 @@ button{font:inherit}
 .score{font-size:42px;font-weight:950;line-height:1}
 .right{text-align:right}.level{font-size:20px;font-weight:850}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}
-.stat{background:var(--panel);border-radius:13px;padding:9px;text-align:center}.stat b{display:block;font-size:17px;margin-top:2px}
-.board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--panel);padding:9px;border-radius:20px;touch-action:manipulation}
-.tile{aspect-ratio:1;border:0;border-radius:13px;background:var(--panel2);cursor:pointer;min-width:44px;transition:transform .07s,background .09s}
-.tile:active{transform:scale(.91)}.tile.red{background:var(--red)}.tile.good{background:var(--good)}
+.stat{background:var(--panel);border-radius:13px;padding:9px;text-align:center}
+.stat b{display:block;font-size:17px;margin-top:2px}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--panel);
+padding:9px;border-radius:20px;touch-action:manipulation}
+.tile{aspect-ratio:1;border:0;border-radius:13px;background:var(--panel2);
+cursor:pointer;min-width:44px;transition:transform .07s,background .09s}
+.tile:active{transform:scale(.91)}
+.tile.red{background:var(--red)}
+.tile.good{background:var(--good)}
 .message{text-align:center;min-height:28px;padding:10px 2px 2px;color:var(--muted);font-size:13px}
 .mission{background:var(--panel);border-radius:14px;padding:11px;margin-top:9px}
-.missionTop{display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px}.bar{height:6px;background:#262c39;border-radius:99px;overflow:hidden}.fill{height:100%;width:0;background:var(--gold);transition:width .15s}
-.actions{display:flex;gap:8px;margin-top:9px}.actions button{flex:1;border:0;border-radius:12px;padding:13px 8px;font-weight:850;cursor:pointer}
-.primary{background:var(--text);color:#090b10}.secondary{background:var(--panel);color:var(--text)}
+.missionTop{display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px}
+.bar{height:6px;background:#262c39;border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--gold);transition:width .15s}
+.actions{display:flex;gap:8px;margin-top:9px}
+.actions button{flex:1;border:0;border-radius:12px;padding:13px 8px;font-weight:850;cursor:pointer}
+.primary{background:var(--text);color:#090b10}
+.secondary{background:var(--panel);color:var(--text)}
 .overlay{margin-top:10px;background:var(--panel);border-radius:17px;padding:16px;text-align:center}
-.overTitle{font-size:22px;font-weight:900}.overScore{font-size:48px;font-weight:950;color:var(--gold);margin:2px}
-.small{font-size:12px;color:var(--muted)}.hidden{display:none}
-.footer{margin-top:18px;text-align:center;font-size:11px;color:#656d7d}.footer a{color:#9299a8}
-button:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:2px}
-@media (prefers-reduced-motion:reduce){.tile,.fill{transition:none}}
+.overTitle{font-size:22px;font-weight:900}
+.overScore{font-size:48px;font-weight:950;color:var(--gold);margin:2px}
+.small{font-size:12px;color:var(--muted)}
+.hidden{display:none}
+.footer{margin-top:18px;text-align:center;font-size:11px;color:#656d7d}
 </style>
 </head>
+
 <body>
-<main class="app" id="app">
-<header class="brand"><h1>REDLINE</h1><p>AVOID RED. BEAT YOUR SCORE.</p></header>
+<main class="app">
 
-<section class="head" aria-label="Current score">
-  <div><div class="label">Score</div><div id="score" class="score">0</div></div>
-  <div class="right"><div class="label">Level</div><div id="level" class="level">1</div></div>
+<header class="brand">
+<h1>REDLINE</h1>
+<p>AVOID RED. BEAT YOUR SCORE.</p>
+</header>
+
+<section class="head">
+<div>
+<div class="label">Score</div>
+<div id="score" class="score">0</div>
+</div>
+<div class="right">
+<div class="label">Level</div>
+<div id="level" class="level">1</div>
+</div>
 </section>
 
-<section class="stats" aria-label="Game statistics">
-  <div class="stat"><div class="label">Combo</div><b id="combo">x1</b></div>
-  <div class="stat"><div class="label">Coins</div><b id="coins">0</b></div>
-  <div class="stat"><div class="label">Best</div><b id="best">0</b></div>
+<section class="stats">
+<div class="stat"><div class="label">Combo</div><b id="combo">x1</b></div>
+<div class="stat"><div class="label">Coins</div><b id="coins">0</b></div>
+<div class="stat"><div class="label">Best</div><b id="best">0</b></div>
 </section>
 
-<section id="board" class="board" aria-label="Game board"></section>
-<div id="message" class="message" aria-live="polite">Tap START. Red ends your run.</div>
+<section id="board" class="board"></section>
 
-<section class="mission" aria-label="Mission progress">
-  <div class="missionTop"><span id="missionText">Mission: score 25 points</span><b id="missionCount">0/25</b></div>
-  <div class="bar"><div id="fill" class="fill"></div></div>
+<div id="message" class="message">
+Tap START. Red ends your run.
+</div>
+
+<section class="mission">
+<div class="missionTop">
+<span id="missionText">Mission: score 25 points</span>
+<b id="missionCount">0/25</b>
+</div>
+<div class="bar"><div id="fill" class="fill"></div></div>
 </section>
 
 <div class="actions">
-  <button id="start" class="primary" type="button">START RUN</button>
-  <button id="reset" class="secondary" type="button">RESET BEST</button>
+<button id="start" class="primary">START RUN</button>
+<button id="reset" class="secondary">RESET BEST</button>
 </div>
 
-<section id="overlay" class="overlay hidden" aria-live="polite">
-  <div class="overTitle">RUN OVER</div>
-  <div id="overScore" class="overScore">0</div>
-  <div id="overText" class="small">Can you beat your best?</div>
+<section id="overlay" class="overlay hidden">
+<div class="overTitle">RUN OVER</div>
+<div id="overScore" class="overScore">0</div>
+<div id="overText" class="small">Can you beat your best?</div>
 </section>
 
 <footer class="footer">
-  Original game prototype. No account or personal data is required to play.
+REDLINE • A fast reflex game
 </footer>
 
 <script>
 (() => {
-  "use strict";
-  const $ = (s) => document.querySelector(s);
-  const board=$("#board"),scoreEl=$("#score"),levelEl=$("#level"),comboEl=$("#combo"),
-        coinsEl=$("#coins"),bestEl=$("#best"),msg=$("#message"),start=$("#start"),
-        reset=$("#reset"),fill=$("#fill"),missionCount=$("#missionCount"),
-        overlay=$("#overlay"),overScore=$("#overScore"),overText=$("#overText");
+"use strict";
 
-  let score=0, coins=0, best=Number(localStorage.getItem("redlineBest")||0);
-  let combo=1, level=1, round=0, red=-1, running=false, timer=null;
-  const mission=25;
+const $=s=>document.querySelector(s);
 
-  function render(){
-    board.innerHTML="";
-    for(let i=0;i<9;i++){
-      const b=document.createElement("button");
-      b.type="button";
-      b.className="tile"+(i===red?" red":"");
-      b.setAttribute("aria-label",i===red?"Red tile — avoid":"Safe tile");
-      b.addEventListener("click",()=>tap(i));
-      board.appendChild(b);
-    }
-  }
-  function update(){
-    scoreEl.textContent=String(score);
-    levelEl.textContent=String(level);
-    comboEl.textContent="x"+combo;
-    coinsEl.textContent=String(coins);
-    bestEl.textContent=String(best);
-    missionCount.textContent=Math.min(score,mission)+"/"+mission;
-    fill.style.width=Math.min(100,(score/mission)*100)+"%";
-  }
-  function schedule(){
-    if(!running)return;
-    round++;
-    level=Math.min(30,1+Math.floor(score/10));
-    red=Math.floor(Math.random()*9);
-    render();
-    const speed=Math.max(230,720-level*15-round*3);
-    clearTimeout(timer);
-    timer=setTimeout(schedule,speed);
-  }
-  function startGame(){
-    clearTimeout(timer);
-    score=0;coins=0;combo=1;level=1;round=0;red=-1;running=true;
-    overlay.classList.add("hidden");
-    start.textContent="RESTART";
-    msg.textContent="Stay sharp. The board is speeding up.";
-    update();schedule();
-  }
-  function tap(i){
-    if(!running)return;
-    if(i===red){end();return}
-    score++;
-    combo=Math.min(9,1+Math.floor(score/5));
-    coins+=combo>=4?2:1;
-    if(score%10===0) msg.textContent="LEVEL "+(1+Math.floor(score/10))+" — SPEED UP!";
-    else if(combo>=5) msg.textContent="🔥 "+combo+"x COMBO";
-    else msg.textContent="Nice. Keep going.";
-    update();
-    const t=board.children[i];
-    if(t){t.classList.add("good");setTimeout(()=>t.classList.remove("good"),90);}
-  }
-  function end(){
-    running=false;clearTimeout(timer);red=-1;render();
-    if(score>best){
-      best=score;
-      localStorage.setItem("redlineBest",String(best));
-      overText.textContent="NEW PERSONAL BEST • "+score;
-    } else {
-      overText.textContent="Best: "+best+" • Coins: "+coins;
-    }
-    update();
-    overScore.textContent=String(score);
-    overlay.classList.remove("hidden");
-    start.textContent="PLAY AGAIN";
-    msg.textContent="You hit red. One more run?";
-  }
-  start.addEventListener("click",startGame);
-  reset.addEventListener("click",()=>{
-    best=0;localStorage.removeItem("redlineBest");score=0;coins=0;combo=1;level=1;
-    running=false;clearTimeout(timer);red=-1;overlay.classList.add("hidden");
-    msg.textContent="Best reset. Ready when you are.";update();render();
-  });
-  update();render();
+const board=$("#board");
+const scoreEl=$("#score");
+const levelEl=$("#level");
+const comboEl=$("#combo");
+const coinsEl=$("#coins");
+const bestEl=$("#best");
+const msg=$("#message");
+const start=$("#start");
+const reset=$("#reset");
+const fill=$("#fill");
+const missionText=$("#missionText");
+const missionCount=$("#missionCount");
+const overlay=$("#overlay");
+const overScore=$("#overScore");
+const overText=$("#overText");
+
+let score=0;
+let coins=0;
+let combo=1;
+let level=1;
+let red=-1;
+let running=false;
+let timer=null;
+
+let best=Number(localStorage.getItem("redlineBest")||0);
+let missionIndex=Number(localStorage.getItem("redlineMission")||0);
+
+const missions=[
+{type:"score",target:25,text:"Score 25 points"},
+{type:"combo",target:5,text:"Reach a 5x combo"},
+{type:"score",target:50,text:"Score 50 points"},
+{type:"coins",target:100,text:"Collect 100 coins"},
+{type:"level",target:10,text:"Reach Level 10"},
+{type:"score",target:100,text:"Score 100 points"},
+{type:"combo",target:9,text:"Reach a 9x combo"},
+{type:"coins",target:250,text:"Collect 250 coins"}
+];
+
+let audio=null;
+
+function beep(freq=500,duration=.06){
+try{
+if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();
+const o=audio.createOscillator();
+const g=audio.createGain();
+o.frequency.value=freq;
+o.type="sine";
+g.gain.value=.035;
+o.connect(g);
+g.connect(audio.destination);
+o.start();
+o.stop(audio.currentTime+duration);
+}catch(e){}
+}
+
+function vibrate(ms=25){
+if(navigator.vibrate)navigator.vibrate(ms);
+}
+
+function missionValue(){
+const m=missions[missionIndex];
+if(!m)return 1;
+if(m.type==="score")return score;
+if(m.type==="combo")return combo;
+if(m.type==="coins")return coins;
+if(m.type==="level")return level;
+return 0;
+}
+
+function updateMission(){
+const m=missions[missionIndex];
+
+if(!m){
+missionText.textContent="All missions complete! 🔥";
+missionCount.textContent="DONE";
+fill.style.width="100%";
+return;
+}
+
+const value=missionValue();
+missionText.textContent="Mission: "+m.text;
+missionCount.textContent=Math.min(value,m.target)+"/"+m.target;
+fill.style.width=Math.min(100,value/m.target*100)+"%";
+}
+
+function checkMission(){
+const m=missions[missionIndex];
+if(!m)return;
+
+if(missionValue()>=m.target){
+msg.textContent="MISSION COMPLETE! 🎯";
+beep(900,.12);
+vibrate(70);
+
+missionIndex++;
+localStorage.setItem("redlineMission",String(missionIndex));
+
+setTimeout(()=>{
+if(running)msg.textContent=missions[missionIndex]
+?"Next: "+missions[missionIndex].text
+:"ALL MISSIONS COMPLETE! 🔥";
+updateMission();
+},350);
+}
+}
+
+function render(){
+board.innerHTML="";
+
+for(let i=0;i<9;i++){
+const b=document.createElement("button");
+b.type="button";
+b.className="tile"+(i===red?" red":"");
+b.setAttribute("aria-label",i===red?"Red tile — avoid":"Safe tile");
+b.onclick=()=>tap(i);
+board.appendChild(b);
+}
+}
+
+function update(){
+scoreEl.textContent=score;
+levelEl.textContent=level;
+comboEl.textContent="x"+combo;
+coinsEl.textContent=coins;
+bestEl.textContent=best;
+updateMission();
+}
+
+function nextRound(){
+if(!running)return;
+
+red=Math.floor(Math.random()*9);
+render();
+
+const speed=Math.max(220,720-level*18-score*2);
+
+clearTimeout(timer);
+timer=setTimeout(nextRound,speed);
+}
+
+function startGame(){
+clearTimeout(timer);
+
+score=0;
+coins=0;
+combo=1;
+level=1;
+red=-1;
+running=true;
+
+overlay.classList.add("hidden");
+start.textContent="RESTART";
+msg.textContent="Stay sharp. The board is speeding up.";
+
+beep(600,.08);
+vibrate(20);
+
+update();
+nextRound();
+}
+
+function tap(i){
+if(!running)return;
+
+if(i===red){
+endGame();
+return;
+}
+
+score++;
+combo=Math.min(9,1+Math.floor(score/5));
+level=Math.min(30,1+Math.floor(score/10));
+
+coins+=combo>=4?2:1;
+
+beep(650+combo*30,.045);
+vibrate(18);
+
+if(combo>=5)
+msg.textContent="🔥 "+combo+"x COMBO!";
+else
+msg.textContent="Nice. Keep going.";
+
+const tile=board.children[i];
+
+if(tile){
+tile.classList.add("good");
+setTimeout(()=>tile.classList.remove("good"),90);
+}
+
+if(score>best){
+best=score;
+localStorage.setItem("redlineBest",String(best));
+}
+
+update();
+checkMission();
+}
+
+function endGame(){
+running=false;
+clearTimeout(timer);
+red=-1;
+render();
+
+beep(150,.18);
+vibrate(120);
+
+if(score>best){
+best=score;
+localStorage.setItem("redlineBest",String(best));
+overText.textContent="NEW PERSONAL BEST!";
+}else{
+overText.textContent="Best: "+best+" • Coins: "+coins;
+}
+
+overScore.textContent=score;
+overlay.classList.remove("hidden");
+start.textContent="PLAY AGAIN";
+msg.textContent="You hit red. One more run?";
+
+update();
+}
+
+start.onclick=startGame;
+
+reset.onclick=()=>{
+best=0;
+localStorage.removeItem("redlineBest");
+
+score=0;
+coins=0;
+combo=1;
+level=1;
+red=-1;
+running=false;
+
+clearTimeout(timer);
+overlay.classList.add("hidden");
+
+msg.textContent="Best reset. Ready when you are.";
+update();
+render();
+};
+
+update();
+render();
+
 })();
 </script>
+
 </main>
 </body>
-</html>
+  </html>
